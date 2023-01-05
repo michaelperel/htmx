@@ -2593,7 +2593,8 @@ return (function () {
                 if (context instanceof Element || isType(context, 'String')) {
                     return issueAjaxRequest(verb, path, null, null, {
                         targetOverride: resolveTarget(context),
-                        returnPromise: true
+                        returnPromise: true,
+                        hxLocationHeaderPath: path,
                     });
                 } else {
                     return issueAjaxRequest(verb, path, resolveTarget(context.source), context.event,
@@ -2603,12 +2604,14 @@ return (function () {
                             values : context.values,
                             targetOverride: resolveTarget(context.target),
                             swapOverride: context.swap,
-                            returnPromise: true
+                            returnPromise: true,
+                            hxLocationHeaderPath: path,
                         });
                 }
             } else {
                 return issueAjaxRequest(verb, path, null, null, {
-                        returnPromise: true
+                        returnPromise: true,
+                        hxLocationHeaderPath: path,
                 });
             }
         }
@@ -2960,6 +2963,9 @@ return (function () {
             } else if (hasHeader(xhr,/HX-Replace-Url:/i)) {
                 pathFromHeaders = xhr.getResponseHeader("HX-Replace-Url");
                 typeFromHeaders = "replace";
+            } else if (responseInfo.etc.hxLocationHeaderPath !== undefined) {
+                pathFromHeaders = responseInfo.etc.hxLocationHeaderPath
+                typeFromHeaders = "push"
             }
 
             // if there was a response header, that has priority
@@ -3036,7 +3042,6 @@ return (function () {
             }
 
             if (hasHeader(xhr, /HX-Location:/i)) {
-                saveCurrentPageToHistory();
                 var redirectPath = xhr.getResponseHeader("HX-Location");
                 var swapSpec;
                 if (redirectPath.indexOf("{") === 0) {
@@ -3045,9 +3050,7 @@ return (function () {
                     redirectPath = swapSpec['path'];
                     delete swapSpec['path'];
                 }
-                ajaxHelper('GET', redirectPath, swapSpec).then(function(){
-                    pushUrlIntoHistory(redirectPath);
-                });
+                ajaxHelper('GET', redirectPath, swapSpec)
                 return;
             }
 
